@@ -11,6 +11,7 @@ export interface SlackCommandResponse {
   response_type: 'in_channel';
   text: string;
   blocks?: KnownBlock[];
+  replace_original?: boolean;
 }
 
 interface PendingWriteStoreGateway extends PendingWriteCreator, PendingWriteApprovalStore {}

@@ -76,6 +76,20 @@ export function buildErrorMessage(command: string, requestText: string): string 
   return `요청: ${formatCommandRequest(command, requestText)}\n요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.`;
 }
 
+export function buildProcessingMessage(command: string, requestText: string) {
+  return {
+    response_type: 'in_channel' as const,
+    text: '요청을 처리 중이에요...',
+    blocks: [
+      buildRequestBlock({ command, text: requestText }),
+      {
+        type: 'section' as const,
+        text: { type: 'mrkdwn' as const, text: '*처리 중*\nAI가 요청을 정리하고 있어요. 잠시만 기다려 주세요.' }
+      }
+    ]
+  };
+}
+
 function buildRequestBlock(context: Pick<WorkflowContext, 'command' | 'text'>): KnownBlock {
   return {
     type: 'section',

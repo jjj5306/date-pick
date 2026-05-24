@@ -1,11 +1,11 @@
 import { App } from '@slack/bolt';
-import type { SlashCommand } from '@slack/bolt';
+import type { RespondFn, SlashCommand } from '@slack/bolt';
 import type { AppConfig } from '../config/env.js';
 import { logger } from '../config/logger.js';
-import type { DateRouteDependencies } from './routes.js';
+import type { DateRouteDependencies, SlackCommandResponse } from './routes.js';
 import { handleNoteCommand, handleRecommendCommand } from './routes.js';
 import { buildEditPendingWriteMessage, handleCancelPendingWrite, handleSavePendingWrite } from './interactions.js';
-import { buildErrorMessage } from './messages.js';
+import { buildErrorMessage, buildProcessingMessage } from './messages.js';
 
 export function createSlackApp(config: AppConfig, dependencies: DateRouteDependencies): App {
   const app = new App({
@@ -17,24 +17,12 @@ export function createSlackApp(config: AppConfig, dependencies: DateRouteDepende
 
   app.command('/date-recommend', async ({ command, ack, respond }) => {
     await ack();
-    try {
-      const response = await handleRecommendCommand(buildWorkflowContext(command), dependencies);
-      await respond(response);
-    } catch (error) {
-      logger.error('date recommend command failed', { error });
-      await respond(buildErrorMessage(command.command, command.text));
-    }
+    await runSlashCommand(command, respond, dependencies, handleRecommendCommand, 'date recommend command failed');
   });
 
   app.command('/date-note', async ({ command, ack, respond }) => {
     await ack();
-    try {
-      const response = await handleNoteCommand(buildWorkflowContext(command), dependencies);
-      await respond(response);
-    } catch (error) {
-      logger.error('date note command failed', { error });
-      await respond(buildErrorMessage(command.command, command.text));
-    }
+    await runSlashCommand(command, respond, dependencies, handleNoteCommand, 'date note command failed');
   });
 
   app.action('save_pending_write', async ({ ack, body, respond }) => {
@@ -63,6 +51,28 @@ export function createSlackApp(config: AppConfig, dependencies: DateRouteDepende
   });
 
   return app;
+}
+
+export async function runSlashCommand(
+  command: SlashCommand,
+  respond: RespondFn,
+  dependencies: DateRouteDependencies,
+  handler: (context: ReturnType<typeof buildWorkflowContext>, dependencies: DateRouteDependencies) => Promise<SlackCommandResponse>,
+  errorMessage: string
+): Promise<void> {
+  await respond(buildProcessingMessage(command.command, command.text));
+
+  try {
+    const response = await handler(buildWorkflowContext(command), dependencies);
+    await respond({ ...response, replace_original: true });
+  } catch (error) {
+    logger.error(errorMessage, { error });
+    await respond({
+      response_type: 'in_channel',
+      replace_original: true,
+      text: buildErrorMessage(command.command, command.text)
+    });
+  }
 }
 
 function buildWorkflowContext(command: SlashCommand) {
