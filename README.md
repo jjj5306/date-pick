@@ -23,7 +23,7 @@ npm run build
 npm run dev
 ```
 
-Slack App은 Socket Mode를 켜고 `/date` slash command와 버튼 interaction을 받을 수 있게 설정해야 합니다. 실제 Slack, Notion, OpenAI 호출은 `.env`에 토큰을 넣은 뒤 실행합니다.
+Slack App은 Socket Mode를 켜고 Slash Commands에 `/date-recommend`, `/date-note`를 각각 추가해야 합니다. 추천은 `/date-recommend`, 기록은 `/date-note`를 사용하며, 기존 `/date` command는 제거하거나 사용하지 않습니다. 저장/수정/취소 버튼을 처리해야 하므로 Interactivity도 계속 켜 둡니다. 실제 Slack, Notion, OpenAI 호출은 `.env`에 토큰을 넣은 뒤 실행합니다.
 
 ## 환경 변수
 
@@ -38,4 +38,3 @@ Slack App은 Socket Mode를 켜고 `/date` slash command와 버튼 interaction�
 - `NOTION_ANNIVERSARY_DATA_SOURCE_ID`
 - `SQLITE_PATH`
 - `OPENAI_MODEL`
-- `OPENAI_MONTHLY_BUDGET_KRW`

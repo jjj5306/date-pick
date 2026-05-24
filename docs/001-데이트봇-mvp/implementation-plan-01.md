@@ -26,7 +26,7 @@
 - TypeScript 프로젝트 스캐폴딩
 - 환경 변수 로딩과 설정 검증
 - Slack Socket Mode 앱 초기화
-- `/date` 명령 라우팅
+- `/date-recommend`, `/date-note` 명령 라우팅
 - 추천 요청 workflow 골격
 - 기록 요청 workflow 골격
 - Notion schema mapping과 adapter interface
@@ -44,6 +44,7 @@
 - OpenAI 모델별 품질 튜닝
 - 실제 날씨 API provider 연동
 - 공개 HTTPS endpoint
+- `/date-plan` 구현. 이 기능은 Issue #2에서 별도 구현한다.
 - 장기 대화 원문 저장
 
 ## 내부 작업
@@ -77,7 +78,6 @@
   - `NOTION_ANNIVERSARY_DATA_SOURCE_ID`
   - `SQLITE_PATH`
   - `OPENAI_MODEL`
-  - `OPENAI_MONTHLY_BUDGET_KRW`
 
 ### 2. 도메인 모델 정의
 
@@ -117,11 +117,11 @@
 작업:
 
 - `@slack/bolt`의 Socket Mode 앱을 초기화한다.
-- `/date` 명령을 등록한다.
-- 입력 텍스트를 다음 intent로 분류한다.
-  - `recommendation`: 추천 요청
-  - `date_log`: 기록 저장 요청
-  - `unknown`: 도움말 또는 재질문
+- `/date-recommend` 명령을 추천 workflow에 연결한다.
+- `/date-note` 명령을 기록 저장 workflow에 연결한다.
+- 기존 `/date` 명령은 등록하지 않는다. Slack App에 남아 있다면 제거하거나 사용하지 않는다.
+- Slack command payload의 `command`와 `text`를 workflow context로 전달한다.
+- command별 handler가 분리되어 있으므로 텍스트 기반 intent 분류는 두지 않는다.
 - 추천 결과는 Slack block message로 반환한다.
 - 기록 저장 후보는 저장, 수정, 취소 버튼을 포함한 미리보기로 반환한다.
 - 저장 버튼 interaction은 `PendingWrite`를 조회한 뒤 Notion 저장 workflow를 호출한다.
@@ -163,8 +163,7 @@
 - 자연어 기록 구조화 함수 `extractDateLog`를 만든다.
 - OpenAI 응답은 JSON schema 검증 후 workflow에 전달한다.
 - 요청 context는 필요한 Notion 요약과 사용자 입력으로 제한한다.
-- token 사용량과 추정 비용을 log context에 남길 수 있게 한다.
-- 월 예산 상한은 hard block이 아니라 경고와 future guard 지점으로 구현한다.
+- token 사용량을 log context에 남길 수 있게 한다.
 
 테스트 포인트:
 
@@ -317,16 +316,22 @@ tests/
 
 ## 테스트 계획
 
-- `env.test.ts`: 필수 환경 변수 검증
-- `notionMapper.test.ts`: Notion property mapping 검증
-- `scoring.test.ts`: 추천 점수화 검증
-- `contextBuilder.test.ts`: OpenAI compact context 검증
-- `openaiSchemas.test.ts`: JSON validation 검증
-- `pendingWriteStore.test.ts`: SQLite 저장소 검증
-- `recommendationWorkflow.test.ts`: Notion, Weather, OpenAI mock 기반 추천 workflow 검증
-- `logWorkflow.test.ts`: 자연어 기록 구조화와 pending write 생성 검증
-- `saveWorkflow.test.ts`: 승인 후 Notion 저장 검증
-- `slackRoutes.test.ts`: `/date` 텍스트 intent 분류와 workflow 라우팅 검증
+- 단위 테스트는 `tests/unit/<src와 같은 경로>/<파일명>.test.ts` 구조를 따른다.
+- 통합 테스트는 `tests/integration/workflows/<workflow 파일명>.test.ts` 구조를 따른다.
+- 외부 API adapter 테스트는 실제 네트워크를 호출하지 않고 mock client로 요청 payload를 검증한다.
+- `tests/unit/config/env.test.ts`: 필수 환경 변수 검증
+- `tests/unit/adapters/notion/notionClient.test.ts`: Notion `databases.query`, `pages.create` 호출 payload 검증
+- `tests/unit/adapters/notion/notionMapper.test.ts`: Notion property mapping 검증
+- `tests/unit/adapters/openai/openaiClient.test.ts`: OpenAI chat completions 호출 payload 검증. 실제 OpenAI API는 호출하지 않는다.
+- `tests/unit/adapters/openai/openaiSchemas.test.ts`: JSON validation 검증
+- `tests/unit/engines/recommendation/scoring.test.ts`: 추천 점수화 검증
+- `tests/unit/engines/recommendation/contextBuilder.test.ts`: OpenAI compact context 검증
+- `tests/unit/storage/pendingWriteStore.test.ts`: SQLite 저장소 검증
+- `tests/unit/slack/routes.test.ts`: `/date-recommend`, `/date-note` 명령별 workflow 라우팅 검증
+- `tests/unit/slack/interactions.test.ts`: 저장, 취소, 수정 안내 interaction 검증
+- `tests/integration/workflows/recommendationWorkflow.test.ts`: Notion, Weather, OpenAI mock 기반 추천 workflow 검증
+- `tests/integration/workflows/logWorkflow.test.ts`: 자연어 기록 구조화와 pending write 생성 검증
+- `tests/integration/workflows/saveWorkflow.test.ts`: 승인 후 Notion 저장 검증
 
 ## 검증 명령
 
@@ -346,14 +351,15 @@ npm run dev
 
 ## 문서 업데이트
 
-- `README.md`에 로컬 실행 방법과 필수 환경 변수를 추가한다.
-- `docs/001-데이트봇-mvp/progress.md`의 다음 작업을 `implementation-plan-01.md` 실행으로 갱신한다.
+- `README.md`에 로컬 실행 방법, 필수 환경 변수, Slack Slash Commands `/date-recommend`와 `/date-note` 설정을 추가한다.
+- `docs/001-데이트봇-mvp/progress.md`의 다음 작업을 실제 token 기반 Socket Mode smoke test 준비로 갱신한다.
+- `docs/001-데이트봇-mvp/changelog.md`에 명령 체계 변경 이력을 기록한다.
 - OpenAI 모델, 날씨 provider, Oracle VM 자동 재시작 방식이 확정되면 `architecture.md` 또는 후속 구현계획에 반영한다.
 
 ## 위험과 대응
 
-- Slack App 권한 또는 Socket Mode 설정이 누락되면 로컬 smoke test가 막힌다.
-  - 대응: `.env.example`과 README에 필요한 token 종류를 명확히 적는다.
+- Slack App 권한, Slash Commands, Interactivity, Socket Mode 설정이 누락되면 로컬 smoke test가 막힌다.
+  - 대응: `.env.example`과 README에 필요한 token 종류와 `/date-recommend`, `/date-note` 설정을 명확히 적는다.
 - Notion property 이름이 변경되면 mapper가 실패한다.
   - 대응: mapper 테스트와 명확한 오류 메시지를 둔다.
 - OpenAI JSON 응답이 schema를 벗어날 수 있다.
@@ -366,7 +372,8 @@ npm run dev
 ## 완료 조건
 
 - TypeScript 프로젝트가 빌드된다.
-- `/date` 입력이 추천 또는 기록 workflow로 라우팅된다.
+- `/date-recommend` 입력이 추천 workflow로 라우팅된다.
+- `/date-note` 입력이 기록 workflow로 라우팅된다.
 - 추천 workflow가 mock 기반으로 최대 3개 추천 결과를 만든다.
 - 기록 workflow가 저장 미리보기를 만들고 `PendingWrite`에 저장한다.
 - 승인 workflow가 mock Notion 저장까지 실행된다.
@@ -380,3 +387,5 @@ npm run dev
 - SQLite 저장소는 Windows와 Oracle VM 양쪽에서 native dependency 부담을 줄이기 위해 `sql.js` 기반 파일 저장으로 구현했다.
 - Notion SDK는 현재 lockfile의 `@notionhq/client@2.3.0`에 맞춰 `databases.query`와 `pages.create`의 `database_id` 경계를 사용한다.
 - 실제 Slack/Notion/OpenAI token 기반 Socket Mode smoke test는 아직 수행하지 않았다.
+- `/date` 단일 명령 대신 `/date-recommend`, `/date-note`로 나누는 문서와 코드 라우팅 변경이 반영되었다.
+- 테스트 파일은 `src` 경로를 반영하는 구조로 재배치했고, Notion/OpenAI adapter의 외부 API 호출 payload는 mock client 단위 테스트로 검증한다.

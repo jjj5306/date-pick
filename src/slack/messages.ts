@@ -1,8 +1,9 @@
 import type { KnownBlock } from '@slack/bolt';
 import type { PendingWrite } from '../domain/pendingWrite.js';
 import type { RecommendationResult } from '../domain/recommendation.js';
+import type { WorkflowContext } from '../domain/workflow.js';
 
-export function buildRecommendationBlocks(result: RecommendationResult): KnownBlock[] {
+export function buildRecommendationBlocks(result: RecommendationResult, context: WorkflowContext): KnownBlock[] {
   const itemBlocks = result.items.flatMap<KnownBlock>((item, index) => [
     {
       type: 'section',
@@ -14,20 +15,22 @@ export function buildRecommendationBlocks(result: RecommendationResult): KnownBl
   ]);
 
   return [
+    buildRequestBlock(context),
     { type: 'section', text: { type: 'mrkdwn', text: `*추천 결과*\n${result.summary}` } },
     ...itemBlocks
   ];
 }
 
-export function buildPendingWritePreviewBlocks(pendingWrite: PendingWrite): KnownBlock[] {
+export function buildPendingWritePreviewBlocks(pendingWrite: PendingWrite, context: WorkflowContext): KnownBlock[] {
   const log = pendingWrite.payload;
 
   return [
+    buildRequestBlock(context),
     { type: 'section', text: { type: 'mrkdwn', text: `*저장 미리보기*\n${log.title}` } },
     {
       type: 'section',
       fields: [
-        { type: 'mrkdwn', text: `*날짜*\n${log.date}` },
+        { type: 'mrkdwn', text: `*날짜*\n${log.date || '확인 필요'}` },
         { type: 'mrkdwn', text: `*장소*\n${log.location ?? '확인 필요'}` },
         { type: 'mrkdwn', text: `*비용*\n${log.cost?.toLocaleString('ko-KR') ?? '확인 필요'}원` },
         { type: 'mrkdwn', text: `*누락*\n${log.missingFields.length ? log.missingFields.join(', ') : '없음'}` }
@@ -44,8 +47,22 @@ export function buildPendingWritePreviewBlocks(pendingWrite: PendingWrite): Know
   ];
 }
 
-export function buildHelpMessage(): string {
-  return '`/date 추천` 또는 `/date 기록 오늘 성수에서 전시 보고...`처럼 입력해 주세요.';
+export function buildErrorMessage(command: string, requestText: string): string {
+  return `요청: ${formatCommandRequest(command, requestText)}\n요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.`;
+}
+
+function buildRequestBlock(context: WorkflowContext): KnownBlock {
+  return {
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: `*요청*\n\`${formatCommandRequest(context.command, context.text)}\``
+    }
+  };
+}
+
+function formatCommandRequest(command: string, requestText: string): string {
+  return `${command} ${requestText || '(빈 요청)'}`.trim();
 }
 
 function formatCost(min?: number, max?: number): string {

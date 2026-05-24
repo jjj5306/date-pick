@@ -22,13 +22,13 @@ MVP는 서버 고정비를 줄이면서도 상시 응답성을 확보하기 위�
 
 Slack App/Bot 요청을 받는 경계다.
 
-- Slash command 또는 app mention 요청 수신
+- Slash Commands `/date-recommend`, `/date-note` 요청 수신
 - Slack signing secret 검증
-- 추천/기록 intent 추출을 위한 원문 전달
+- 명령별 workflow 라우팅을 위한 command와 원문 전달
 - 추천 결과 메시지 전송
 - 저장, 수정, 취소 버튼 interaction 처리
 
-MVP에서는 slash command를 우선한다. Slack 연결은 Socket Mode를 기본값으로 사용해 공개 HTTPS endpoint 없이 Oracle VM에서 Slack 요청과 interaction을 받을 수 있게 한다.
+MVP에서는 slash command를 우선한다. 추천은 `/date-recommend`, 기록은 `/date-note`로 분리하고 기존 `/date` command는 사용하지 않는다. Slack 연결은 Socket Mode를 기본값으로 사용해 공개 HTTPS endpoint 없이 Oracle VM에서 Slack 요청과 interaction을 받을 수 있게 한다.
 
 ### Application Runtime
 
@@ -125,9 +125,9 @@ sequenceDiagram
     participant Reco as Recommendation Engine
     participant OpenAI as OpenAI Adapter
 
-    User->>Slack: /date 추천
+    User->>Slack: /date-recommend 이번 주말 추천
     Slack->>App: command payload
-    App->>App: 서명 검증 및 intent 분류
+    App->>App: 서명 검증 및 /date-recommend 라우팅
     App->>Notion: 데이트/기념일 조회
     Notion-->>App: 정규화된 후보와 기록
     App->>Weather: 날짜/지역 예보 조회
@@ -150,7 +150,7 @@ sequenceDiagram
     participant OpenAI as OpenAI Adapter
     participant Notion as Notion Adapter
 
-    User->>Slack: /date 기록 오늘 성수에서 전시...
+    User->>Slack: /date-note 오늘 성수에서 전시...
     Slack->>App: command payload
     App->>OpenAI: 자연어 기록 구조화
     OpenAI-->>App: 저장 후보 JSON
@@ -167,9 +167,12 @@ sequenceDiagram
 ### Slack
 
 - 일반 Slack App/Bot을 사용한다.
-- MVP 기본 명령은 `/date`로 둔다.
+- MVP 기본 명령은 추천용 `/date-recommend`, 기록용 `/date-note`로 둔다.
+- Slack App 설정의 Slash Commands에 `/date-recommend`, `/date-note`를 각각 추가한다.
+- 기존 `/date` command는 제거하거나 사용하지 않는다.
+- `/date-plan`은 Issue #2에서 별도로 구현하며 이번 MVP 변경 범위에 포함하지 않는다.
 - 요청 검증에는 Slack signing secret을 사용한다.
-- 버튼 interaction은 저장 승인, 수정 요청, 취소를 처리한다.
+- 버튼 interaction은 저장 승인, 수정 요청, 취소를 처리하므로 Slack Interactivity는 계속 필요하다.
 - Oracle VM 실행에서는 Socket Mode를 기본으로 사용한다.
 - 공개 HTTPS endpoint는 Socket Mode를 사용할 수 없거나 다른 클라우드 배포로 전환할 때만 검토한다.
 
@@ -291,7 +294,7 @@ PendingWrite
 ### 테스트
 
 - Slack payload 검증 단위 테스트
-- intent 분류 단위 테스트
+- Slash command 라우팅 단위 테스트
 - Notion schema mapping 단위 테스트
 - 추천 점수화 단위 테스트
 - OpenAI 응답 JSON validation 테스트
@@ -352,6 +355,6 @@ flowchart TD
 
 - 실제 Slack/Notion/OpenAI token으로 Socket Mode smoke test를 수행한다.
 - Oracle Always Free VM 생성 가능 여부와 운영 제약을 확인한다.
-- 실제 운영용 OpenAI 모델과 월 예산 상한을 정한다.
+- 실제 운영용 OpenAI 모델을 정한다.
 - 날씨 provider를 정한다.
 - Oracle VM 프로세스 자동 재시작 방식을 정한다.
