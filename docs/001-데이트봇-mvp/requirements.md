@@ -27,7 +27,7 @@ AI 기능은 OpenAI API로 구현한다. 서버 운영비는 최소화하며, �
 
 ### 데이트 추천
 
-사용자가 Slack에서 `/date-recommend`, `/date-recommend 이번 주말 비 오면 실내 위주로`, `/date-recommend 성수 말고 새로운 곳`처럼 요청한다. MVP 기본 추천 명령은 `/date-recommend`이며, 기존 `/date` command는 사용하지 않는다.
+사용자가 Slack에서 `/date-recommend`, `/date-recommend 이번 주말 데이트 추천`, `/date-recommend 성수 말고 새로운 곳`처럼 요청한다. MVP 기본 추천 명령은 `/date-recommend`이며, 기존 `/date` command는 사용하지 않는다.
 
 시스템은 Notion의 데이트 후보와 완료된 기록, 기념일, 최근 반복 패턴, 날씨와 예산 조건을 참고해 최대 3개의 추천안을 제시한다. 각 추천안에는 이유, 예상 비용 범위, 확인 필요 사항, Notion 저장 후보 정보를 포함한다.
 

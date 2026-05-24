@@ -1,3 +1,4 @@
+import { logger } from '../config/logger.js';
 import type { SaveWorkflowDependencies } from '../workflows/saveWorkflow.js';
 import { runSaveWorkflow } from '../workflows/saveWorkflow.js';
 
@@ -5,8 +6,16 @@ export async function handleSavePendingWrite(
   pendingWriteId: string,
   dependencies: SaveWorkflowDependencies
 ): Promise<string> {
-  const result = await runSaveWorkflow(pendingWriteId, dependencies);
-  return `Notion에 저장했어요: ${result.url}`;
+  try {
+    const result = await runSaveWorkflow(pendingWriteId, dependencies);
+    return `Notion에 저장했어요: ${result.url}`;
+  } catch (error) {
+    logger.error('save pending write failed', { error });
+    if (error instanceof Error && error.message.includes('Pending write')) {
+      return '저장할 대기 항목을 찾지 못했어요. `/date-note ...`로 다시 보내 주세요.';
+    }
+    return 'Notion에 저장하지 못했어요. Notion 데이터베이스가 integration과 공유되어 있는지, `.env`의 `NOTION_DATE_DATA_SOURCE_ID`가 실제 데이터베이스 ID인지 확인한 뒤 저장을 다시 눌러 주세요.';
+  }
 }
 
 export function handleCancelPendingWrite(
