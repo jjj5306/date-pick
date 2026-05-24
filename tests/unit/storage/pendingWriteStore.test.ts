@@ -15,6 +15,10 @@ describe('PendingWriteStore', () => {
       userId: 'U1',
       channelId: 'C1',
       action: 'save_date_log',
+      request: {
+        command: '/date-note',
+        text: '오늘 성수'
+      },
       payload: {
         title: '성수 데이트',
         date: '2026-05-24',
@@ -25,6 +29,7 @@ describe('PendingWriteStore', () => {
     });
 
     expect(store.findById(created.id)?.payload.title).toBe('성수 데이트');
+    expect(store.findById(created.id)?.request?.text).toBe('오늘 성수');
   });
 
   test('does not return expired pending writes and can delete expired rows', async () => {

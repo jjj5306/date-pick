@@ -10,7 +10,7 @@ export class PendingWriteStore {
     private readonly ttlMs: number = DEFAULT_TTL_MS
   ) {}
 
-  create(input: Pick<PendingWrite, 'userId' | 'channelId' | 'action' | 'payload'>): PendingWrite {
+  create(input: Pick<PendingWrite, 'userId' | 'channelId' | 'action' | 'payload' | 'request'>): PendingWrite {
     const now = new Date();
     const pendingWrite: PendingWrite = {
       id: randomUUID(),
@@ -18,6 +18,7 @@ export class PendingWriteStore {
       channelId: input.channelId,
       action: input.action,
       payload: input.payload,
+      request: input.request,
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + this.ttlMs).toISOString()
     };
@@ -29,7 +30,10 @@ export class PendingWriteStore {
       action: pendingWrite.action,
       expiresAt: pendingWrite.expiresAt,
       createdAt: pendingWrite.createdAt,
-      payloadJson: JSON.stringify(pendingWrite.payload)
+      payloadJson: JSON.stringify({
+        payload: pendingWrite.payload,
+        request: pendingWrite.request
+      })
     });
 
     return pendingWrite;
@@ -59,13 +63,23 @@ export class PendingWriteStore {
 }
 
 function mapRow(row: PendingWriteRow): PendingWrite {
+  const stored = parseStoredPendingWrite(row.payload_json);
   return {
     id: row.id,
     userId: row.user_id,
     channelId: row.channel_id,
     action: row.action as PendingWrite['action'],
-    payload: JSON.parse(row.payload_json) as PendingWrite['payload'],
+    payload: stored.payload,
+    request: stored.request,
     expiresAt: row.expires_at,
     createdAt: row.created_at
   };
+}
+
+function parseStoredPendingWrite(payloadJson: string): Pick<PendingWrite, 'payload' | 'request'> {
+  const parsed = JSON.parse(payloadJson) as PendingWrite['payload'] | Pick<PendingWrite, 'payload' | 'request'>;
+  if (parsed && typeof parsed === 'object' && 'payload' in parsed) {
+    return parsed as Pick<PendingWrite, 'payload' | 'request'>;
+  }
+  return { payload: parsed as PendingWrite['payload'] };
 }

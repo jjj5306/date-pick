@@ -22,3 +22,9 @@
 - 이 smoke test는 OpenAI API를 호출하지 않는다.
 - 기본 `npm test`는 외부 네트워크와 개인 `.env`에 의존하지 않도록 unit/integration mock 테스트만 실행한다.
 - Notion database ID 환경 변수는 전체 URL이나 view query가 아닌 ID 형식만 허용하도록 검증한다.
+
+## 2026-05-24: Slack 응답 공개와 원 요청 보존
+
+- 추천과 기록 미리보기 성공 응답은 `in_channel`로 보내 채널에 남게 한다.
+- 기록 저장 대기 상태에 원래 `/date-note ...` 요청을 함께 저장한다.
+- 저장 버튼 성공 시 원래 미리보기 메시지를 저장 완료 메시지로 교체하고, 원 요청과 저장 요약, Notion 링크를 함께 표시한다.

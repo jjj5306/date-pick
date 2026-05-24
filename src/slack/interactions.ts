@@ -1,14 +1,27 @@
 import { logger } from '../config/logger.js';
 import type { SaveWorkflowDependencies } from '../workflows/saveWorkflow.js';
 import { runSaveWorkflow } from '../workflows/saveWorkflow.js';
+import { buildSavedDateLogBlocks } from './messages.js';
+
+interface SlackActionResponse {
+  response_type: 'in_channel';
+  replace_original: boolean;
+  text: string;
+  blocks?: ReturnType<typeof buildSavedDateLogBlocks>;
+}
 
 export async function handleSavePendingWrite(
   pendingWriteId: string,
   dependencies: SaveWorkflowDependencies
-): Promise<string> {
+): Promise<string | SlackActionResponse> {
   try {
     const result = await runSaveWorkflow(pendingWriteId, dependencies);
-    return `Notion에 저장했어요: ${result.url}`;
+    return {
+      response_type: 'in_channel',
+      replace_original: true,
+      text: `Notion에 저장했어요: ${result.url}`,
+      blocks: buildSavedDateLogBlocks(result.pendingWrite, result.url)
+    };
   } catch (error) {
     logger.error('save pending write failed', { error });
     if (error instanceof Error && error.message.includes('Pending write')) {

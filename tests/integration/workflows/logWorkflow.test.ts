@@ -31,5 +31,9 @@ describe('runLogWorkflow', () => {
     });
 
     expect(pendingWriteStore.findById(pendingWrite.id)?.payload.title).toBe('성수 데이트');
+    expect(pendingWriteStore.findById(pendingWrite.id)?.request).toEqual({
+      command: '/date-note',
+      text: '오늘 성수'
+    });
   });
 });

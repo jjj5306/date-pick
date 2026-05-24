@@ -14,7 +14,7 @@ export interface SaveWorkflowDependencies {
 export async function runSaveWorkflow(
   pendingWriteId: string,
   dependencies: SaveWorkflowDependencies
-): Promise<{ url: string }> {
+): Promise<{ url: string; pendingWrite: PendingWrite }> {
   const pendingWrite = dependencies.pendingWriteStore.findById(pendingWriteId);
   if (!pendingWrite) {
     throw new Error('Pending write was not found or already expired.');
@@ -22,5 +22,5 @@ export async function runSaveWorkflow(
 
   const result = await dependencies.notionRepository.saveDateLog(pendingWrite.payload);
   dependencies.pendingWriteStore.deleteById(pendingWrite.id);
-  return result;
+  return { ...result, pendingWrite };
 }

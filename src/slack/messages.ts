@@ -47,11 +47,35 @@ export function buildPendingWritePreviewBlocks(pendingWrite: PendingWrite, conte
   ];
 }
 
+export function buildSavedDateLogBlocks(pendingWrite: PendingWrite, notionUrl: string): KnownBlock[] {
+  const log = pendingWrite.payload;
+  const blocks: KnownBlock[] = [];
+
+  if (pendingWrite.request) {
+    blocks.push(buildRequestBlock(pendingWrite.request));
+  }
+
+  blocks.push(
+    { type: 'section', text: { type: 'mrkdwn', text: `*저장 완료*\n<${notionUrl}|Notion 페이지>에 저장했어요.` } },
+    {
+      type: 'section',
+      fields: [
+        { type: 'mrkdwn', text: `*제목*\n${log.title}` },
+        { type: 'mrkdwn', text: `*날짜*\n${log.date || '확인 필요'}` },
+        { type: 'mrkdwn', text: `*장소*\n${log.location ?? '확인 필요'}` },
+        { type: 'mrkdwn', text: `*비용*\n${log.cost?.toLocaleString('ko-KR') ?? '확인 필요'}원` }
+      ]
+    }
+  );
+
+  return blocks;
+}
+
 export function buildErrorMessage(command: string, requestText: string): string {
   return `요청: ${formatCommandRequest(command, requestText)}\n요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.`;
 }
 
-function buildRequestBlock(context: WorkflowContext): KnownBlock {
+function buildRequestBlock(context: Pick<WorkflowContext, 'command' | 'text'>): KnownBlock {
   return {
     type: 'section',
     text: {

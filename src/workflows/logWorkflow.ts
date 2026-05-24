@@ -3,7 +3,7 @@ import type { PendingWrite } from '../domain/pendingWrite.js';
 import type { WorkflowContext } from '../domain/workflow.js';
 
 export interface PendingWriteCreator {
-  create(input: Pick<PendingWrite, 'userId' | 'channelId' | 'action' | 'payload'>): PendingWrite;
+  create(input: Pick<PendingWrite, 'userId' | 'channelId' | 'action' | 'payload' | 'request'>): PendingWrite;
 }
 
 export interface LogWorkflowDependencies {
@@ -21,6 +21,10 @@ export async function runLogWorkflow(
     userId: context.userId,
     channelId: context.channelId,
     action: 'save_date_log',
-    payload: structuredLog
+    payload: structuredLog,
+    request: {
+      command: context.command,
+      text: context.text
+    }
   });
 }

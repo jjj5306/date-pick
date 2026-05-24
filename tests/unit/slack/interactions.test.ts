@@ -36,7 +36,13 @@ describe('slack interactions', () => {
       }
     });
 
-    expect(response).toContain('https://notion.test/page');
+    expect(response).toMatchObject({
+      response_type: 'in_channel',
+      replace_original: true,
+      text: 'Notion에 저장했어요: https://notion.test/page'
+    });
+    expect(JSON.stringify(response)).toContain('성수 데이트');
+    expect(JSON.stringify(response)).toContain('https://notion.test/page');
   });
 
   test('returns a retryable Notion setup message when saving fails', async () => {

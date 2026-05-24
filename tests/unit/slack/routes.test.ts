@@ -32,6 +32,7 @@ describe('slack routes', () => {
       }
     });
 
+    expect(response.response_type).toBe('in_channel');
     expect(response.text).toBe('추천');
     expect(response.blocks).toBeDefined();
     expect(JSON.stringify(response.blocks)).toContain('/date-recommend 이번 주말 추천');
@@ -84,6 +85,7 @@ describe('slack routes', () => {
       }
     });
 
+    expect(response.response_type).toBe('in_channel');
     expect(response.text).toBe('저장 전 내용을 확인해 주세요.');
     expect(create).toHaveBeenCalled();
     expect(JSON.stringify(response.blocks)).toContain('/date-note 오늘 성수에서 전시');
