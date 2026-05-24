@@ -41,10 +41,11 @@ export class OpenAIClientAdapter implements OpenAIAdapter {
   }
 
   async generateRecommendationResponse(context: RecommendationContext): Promise<RecommendationResult> {
+    const referenceDate = formatDateInSeoul(this.now());
     const response = await this.client.chat.completions.create({
       model: this.model,
       response_format: recommendationResponseFormat,
-      messages: [{ role: 'user', content: buildRecommendationPrompt(context) }]
+      messages: [{ role: 'user', content: buildRecommendationPrompt(context, referenceDate) }]
     });
     const content = response.choices[0]?.message.content ?? '{}';
     return parseRecommendationResponse(parseJsonResponse(content));

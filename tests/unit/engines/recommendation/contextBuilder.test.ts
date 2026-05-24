@@ -9,7 +9,7 @@ describe('buildRecommendationContext', () => {
       anniversaries: [],
       candidates: Array.from({ length: 5 }, (_, index) => ({
         score: 100 - index,
-        reasons: ['test'],
+        similarCompletedTitles: ['지난 전시 데이트'],
         needsUserCheck: false,
         item: {
           id: `${index}`,
@@ -23,5 +23,6 @@ describe('buildRecommendationContext', () => {
 
     expect(context.candidates).toHaveLength(3);
     expect(context.userRequest.length).toBeLessThanOrEqual(500);
+    expect(context.candidates[0].similarCompletedTitles).toEqual(['지난 전시 데이트']);
   });
 });

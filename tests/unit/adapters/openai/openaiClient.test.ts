@@ -11,8 +11,8 @@ describe('OpenAIClientAdapter', () => {
       items: [{
         title: 'gallery date',
         reason: 'good indoor option',
-        estimatedCostMin: null,
-        estimatedCostMax: null,
+        estimatedCostMin: 30000,
+        estimatedCostMax: 50000,
         weatherFit: null,
         noveltyReason: null,
         confidence: 'high',
@@ -20,7 +20,7 @@ describe('OpenAIClientAdapter', () => {
         notionSourceUrls: ['https://notion.test/date']
       }]
     });
-    const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client);
+    const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client, () => new Date('2026-05-24T12:00:00.000+09:00'));
 
     await expect(adapter.generateRecommendationResponse({
       userRequest: 'recommend this weekend',
@@ -37,7 +37,8 @@ describe('OpenAIClientAdapter', () => {
         location: 'Seongsu',
         estimatedCost: 80000,
         sourceUrl: 'https://notion.test/date',
-        reasons: ['high priority'],
+        priority: 'high',
+        similarCompletedTitles: ['last gallery date'],
         needsUserCheck: false
       }]
     })).resolves.toMatchObject({ summary: 'recommendation done' });
@@ -54,7 +55,9 @@ describe('OpenAIClientAdapter', () => {
       }
     });
     expect(input.messages[0]?.content).toContain('recommend_dates');
+    expect(input.messages[0]?.content).toContain('2026-05-24');
     expect(input.messages[0]?.content).toContain('https://notion.test/date');
+    expect(input.messages[0]?.content).toContain('similarCompletedTitles');
     expect(input.messages[0]?.content).not.toContain('notionSourceUrls');
   });
 

@@ -1,9 +1,16 @@
 import type { RecommendationContext } from '../../engines/recommendation/contextBuilder.js';
 
-export function buildRecommendationPrompt(context: RecommendationContext): string {
+export function buildRecommendationPrompt(context: RecommendationContext, referenceDate: string): string {
   return JSON.stringify({
     task: 'recommend_dates',
     language: 'ko',
+    timezone: 'Asia/Seoul',
+    referenceDate,
+    writing: {
+      summary: 'one short sentence',
+      reason: 'mention overlap with similarCompletedTitles when present, then explain why it still fits',
+      cost: 'estimate a realistic KRW range when estimatedCost is missing'
+    },
     request: context.userRequest,
     weather: context.weather,
     anniversaries: context.anniversaries,
@@ -14,7 +21,8 @@ export function buildRecommendationPrompt(context: RecommendationContext): strin
       location: candidate.location,
       estimatedCost: candidate.estimatedCost,
       sourceUrl: candidate.sourceUrl,
-      reasons: candidate.reasons,
+      priority: candidate.priority,
+      similarCompletedTitles: candidate.similarCompletedTitles,
       needsUserCheck: candidate.needsUserCheck
     }))
   });

@@ -35,7 +35,7 @@ export async function handleNoteCommand(
   const pendingWrite = await runLogWorkflow(context, dependencies);
   return {
     response_type: 'in_channel',
-    text: '저장 전 내용을 확인해 주세요.',
+    text: '저장할 내용을 확인해 주세요.',
     blocks: buildPendingWritePreviewBlocks(pendingWrite, context)
   };
 }

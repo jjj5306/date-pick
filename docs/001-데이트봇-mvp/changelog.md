@@ -1,5 +1,12 @@
 # 변경 이력
 
+## 2026-05-24: 추천 응답 가독성과 비용 추정 강화
+
+- 추천 후보 컨텍스트에서 내부 점수 계산 문구를 제거하고, 최근에 완료한 비슷한 데이트 제목만 OpenAI에 전달한다.
+- 추천 프롬프트에 기준 날짜와 Asia/Seoul timezone을 포함해 `이번주 월요일` 같은 상대 표현을 일관되게 해석하도록 했다.
+- 추천 응답 schema에서 예상 비용 범위를 숫자로 필수화해, Notion에 비용이 없어도 OpenAI가 합리적인 원화 범위를 추정하도록 했다.
+- Slack 추천 메시지를 `추천 이유`, `예상 비용`, `확인할 점`, `날씨`, `새로움` 섹션으로 나눠 읽기 쉽게 표시한다.
+
 ## 2026-05-24: OpenAI strict structured output 적용
 
 - OpenAI 호출을 `response_format: json_object`에서 `response_format: json_schema`와 `strict: true`로 변경했다.

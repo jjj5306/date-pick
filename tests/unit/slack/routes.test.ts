@@ -25,17 +25,27 @@ describe('slack routes', () => {
       },
       openAIAdapter: {
         generateRecommendationResponse: vi.fn().mockResolvedValue({
-          summary: '추천',
-          items: [{ title: '전시', reason: '좋아요', confidence: 'medium', needsUserCheck: true, notionSourceUrls: [] }]
+          summary: '전시를 추천해요.',
+          items: [{
+            title: '전시',
+            reason: '최근 기록과 겹치지만 비 오는 날에도 이동 부담이 적어요.',
+            estimatedCostMin: 30000,
+            estimatedCostMax: 50000,
+            confidence: 'medium',
+            needsUserCheck: true,
+            notionSourceUrls: []
+          }]
         }),
         extractDateLog: vi.fn()
       }
     });
 
     expect(response.response_type).toBe('in_channel');
-    expect(response.text).toBe('추천');
+    expect(response.text).toBe('전시를 추천해요.');
     expect(response.blocks).toBeDefined();
     expect(JSON.stringify(response.blocks)).toContain('/date-recommend 이번 주말 추천');
+    expect(JSON.stringify(response.blocks)).toContain('추천 이유');
+    expect(JSON.stringify(response.blocks)).toContain('30,000~50,000원');
   });
 
   test('routes /date-note requests to the note workflow path', async () => {
@@ -86,7 +96,7 @@ describe('slack routes', () => {
     });
 
     expect(response.response_type).toBe('in_channel');
-    expect(response.text).toBe('저장 전 내용을 확인해 주세요.');
+    expect(response.text).toBe('저장할 내용을 확인해 주세요.');
     expect(create).toHaveBeenCalled();
     expect(JSON.stringify(response.blocks)).toContain('/date-note 오늘 성수에서 전시');
   });

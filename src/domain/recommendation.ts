@@ -3,7 +3,7 @@ import type { DateItem } from './dateItem.js';
 export interface RecommendationCandidate {
   item: DateItem;
   score: number;
-  reasons: string[];
+  similarCompletedTitles: string[];
   needsUserCheck: boolean;
 }
 

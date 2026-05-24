@@ -9,20 +9,10 @@ interface SlackMrkdwnField {
 }
 
 export function buildRecommendationBlocks(result: RecommendationResult, context: WorkflowContext): KnownBlock[] {
-  const itemBlocks = result.items.flatMap<KnownBlock>((item, index) => [
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `*${index + 1}. ${item.title}*\n${item.reason}\n예상 비용: ${formatCost(item.estimatedCostMin, item.estimatedCostMax)}\n확인 필요: ${item.needsUserCheck ? '있음' : '없음'}`
-      }
-    }
-  ]);
-
   return [
     buildRequestBlock(context),
     { type: 'section', text: { type: 'mrkdwn', text: `*추천 결과*\n${result.summary}` } },
-    ...itemBlocks
+    ...result.items.flatMap((item, index) => buildRecommendationItemBlocks(item, index))
   ];
 }
 
@@ -90,6 +80,31 @@ export function buildProcessingMessage(command: string, requestText: string) {
   };
 }
 
+function buildRecommendationItemBlocks(item: RecommendationResult['items'][number], index: number): KnownBlock[] {
+  const fields: SlackMrkdwnField[] = [
+    { type: 'mrkdwn', text: `*예상 비용*\n${formatCost(item.estimatedCostMin, item.estimatedCostMax)}` },
+    { type: 'mrkdwn', text: `*확인할 점*\n${item.needsUserCheck ? '날씨나 예약만 확인' : '바로 진행 가능'}` }
+  ];
+
+  if (item.weatherFit) {
+    fields.push({ type: 'mrkdwn', text: `*날씨*\n${item.weatherFit}` });
+  }
+  if (item.noveltyReason) {
+    fields.push({ type: 'mrkdwn', text: `*새로움*\n${item.noveltyReason}` });
+  }
+
+  return [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*${index + 1}. ${item.title}*\n*추천 이유*\n${item.reason}`
+      }
+    },
+    { type: 'section', fields }
+  ];
+}
+
 function buildRequestBlock(context: Pick<WorkflowContext, 'command' | 'text'>): KnownBlock {
   return {
     type: 'section',
@@ -114,7 +129,7 @@ function buildDateLogSummaryFields(log: PendingWrite['payload']): SlackMrkdwnFie
 
 function formatCost(min?: number, max?: number): string {
   if (min === undefined && max === undefined) {
-    return '확인 필요';
+    return '추정값 없음';
   }
   if (min !== undefined && max !== undefined) {
     return `${min.toLocaleString('ko-KR')}~${max.toLocaleString('ko-KR')}원`;

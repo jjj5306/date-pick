@@ -6,8 +6,8 @@ const nullableNumber = z.preprocess((value) => value === null ? undefined : valu
 const recommendationItemSchema = z.object({
   title: z.string().trim().min(1),
   reason: z.string().trim().min(1),
-  estimatedCostMin: nullableNumber,
-  estimatedCostMax: nullableNumber,
+  estimatedCostMin: z.number(),
+  estimatedCostMax: z.number(),
   weatherFit: nullableString,
   noveltyReason: nullableString,
   confidence: z.enum(['low', 'medium', 'high']),

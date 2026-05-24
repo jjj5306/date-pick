@@ -12,8 +12,8 @@ describe('openaiSchemas', () => {
       items: [{
         title: 'Gallery date',
         reason: 'Good indoor option.',
-        estimatedCostMin: null,
-        estimatedCostMax: null,
+        estimatedCostMin: 30000,
+        estimatedCostMax: 50000,
         weatherFit: null,
         noveltyReason: null,
         confidence: 'high',

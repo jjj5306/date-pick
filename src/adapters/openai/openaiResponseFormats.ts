@@ -8,8 +8,6 @@ export type OpenAIResponseFormat = {
 };
 
 const nullableString = { type: ['string', 'null'] };
-const nullableNumber = { type: ['number', 'null'] };
-
 export const recommendationResponseFormat: OpenAIResponseFormat = {
   type: 'json_schema',
   json_schema: {
@@ -41,8 +39,8 @@ export const recommendationResponseFormat: OpenAIResponseFormat = {
             properties: {
               title: { type: 'string' },
               reason: { type: 'string' },
-              estimatedCostMin: nullableNumber,
-              estimatedCostMax: nullableNumber,
+              estimatedCostMin: { type: 'number' },
+              estimatedCostMax: { type: 'number' },
               weatherFit: nullableString,
               noveltyReason: nullableString,
               confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
@@ -82,7 +80,7 @@ export const dateLogResponseFormat: OpenAIResponseFormat = {
         category: { type: 'string', enum: ['travel', 'date', 'restaurant', 'anniversary', 'seasonal', 'other'] },
         location: nullableString,
         indoorOutdoor: { type: ['string', 'null'], enum: ['indoor', 'outdoor', 'mixed', 'unknown', null] },
-        cost: nullableNumber,
+        cost: { type: ['number', 'null'] },
         sentiment: nullableString,
         notes: nullableString,
         nextRecommendationHints: { type: 'array', items: { type: 'string' } },

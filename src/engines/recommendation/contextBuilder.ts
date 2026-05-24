@@ -8,7 +8,8 @@ export interface RecommendationContextCandidate {
   location?: string;
   estimatedCost?: number;
   sourceUrl?: string;
-  reasons: string[];
+  priority: string;
+  similarCompletedTitles: string[];
   needsUserCheck: boolean;
 }
 
@@ -39,7 +40,8 @@ export function buildRecommendationContext(input: {
       location: candidate.item.location,
       estimatedCost: candidate.item.estimatedCost,
       sourceUrl: candidate.item.sourceUrl,
-      reasons: candidate.reasons,
+      priority: candidate.item.priority,
+      similarCompletedTitles: candidate.similarCompletedTitles,
       needsUserCheck: candidate.needsUserCheck
     }))
   };
