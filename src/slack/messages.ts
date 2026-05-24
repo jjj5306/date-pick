@@ -3,6 +3,11 @@ import type { PendingWrite } from '../domain/pendingWrite.js';
 import type { RecommendationResult } from '../domain/recommendation.js';
 import type { WorkflowContext } from '../domain/workflow.js';
 
+interface SlackMrkdwnField {
+  type: 'mrkdwn';
+  text: string;
+}
+
 export function buildRecommendationBlocks(result: RecommendationResult, context: WorkflowContext): KnownBlock[] {
   const itemBlocks = result.items.flatMap<KnownBlock>((item, index) => [
     {
@@ -30,9 +35,7 @@ export function buildPendingWritePreviewBlocks(pendingWrite: PendingWrite, conte
     {
       type: 'section',
       fields: [
-        { type: 'mrkdwn', text: `*날짜*\n${log.date || '확인 필요'}` },
-        { type: 'mrkdwn', text: `*장소*\n${log.location ?? '확인 필요'}` },
-        { type: 'mrkdwn', text: `*비용*\n${log.cost?.toLocaleString('ko-KR') ?? '확인 필요'}원` },
+        ...buildDateLogSummaryFields(log),
         { type: 'mrkdwn', text: `*누락*\n${log.missingFields.length ? log.missingFields.join(', ') : '없음'}` }
       ]
     },
@@ -61,9 +64,7 @@ export function buildSavedDateLogBlocks(pendingWrite: PendingWrite, notionUrl: s
       type: 'section',
       fields: [
         { type: 'mrkdwn', text: `*제목*\n${log.title}` },
-        { type: 'mrkdwn', text: `*날짜*\n${log.date || '확인 필요'}` },
-        { type: 'mrkdwn', text: `*장소*\n${log.location ?? '확인 필요'}` },
-        { type: 'mrkdwn', text: `*비용*\n${log.cost?.toLocaleString('ko-KR') ?? '확인 필요'}원` }
+        ...buildDateLogSummaryFields(log)
       ]
     }
   );
@@ -87,6 +88,14 @@ function buildRequestBlock(context: Pick<WorkflowContext, 'command' | 'text'>): 
 
 function formatCommandRequest(command: string, requestText: string): string {
   return `${command} ${requestText || '(빈 요청)'}`.trim();
+}
+
+function buildDateLogSummaryFields(log: PendingWrite['payload']): SlackMrkdwnField[] {
+  return [
+    { type: 'mrkdwn', text: `*날짜*\n${log.date || '확인 필요'}` },
+    { type: 'mrkdwn', text: `*장소*\n${log.location ?? '확인 필요'}` },
+    { type: 'mrkdwn', text: `*비용*\n${log.cost?.toLocaleString('ko-KR') ?? '확인 필요'}원` }
+  ];
 }
 
 function formatCost(min?: number, max?: number): string {

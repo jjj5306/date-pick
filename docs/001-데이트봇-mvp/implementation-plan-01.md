@@ -137,8 +137,8 @@
 
 작업:
 
-- `데이트` data source를 조회해 `DateItem[]`으로 변환한다.
-- `기념일` data source를 조회해 `Anniversary[]`로 변환한다.
+- `데이트` database를 조회해 `DateItem[]`으로 변환한다.
+- `기념일` database를 조회해 `Anniversary[]`로 변환한다.
 - 승인된 `StructuredDateLog`를 Notion page 생성 payload로 변환한다.
 - 한국어 Notion property와 domain field mapping을 mapper에 격리한다.
 - formula와 relation property는 MVP에서 읽기 전용으로 둔다.
@@ -206,15 +206,15 @@
 
 - 기록 요청은 OpenAI adapter로 구조화한다.
 - 구조화 결과를 Slack 미리보기로 보여준다.
-- 승인 전 payload를 `PendingWrite`로 저장한다.
+- 승인 전 payload와 원 `/date-note ...` 요청을 `PendingWrite`로 저장한다.
 - 저장 버튼을 누르면 `PendingWrite`를 조회하고 Notion 저장을 실행한다.
-- 저장 완료 후 Slack에 Notion page URL을 반환한다.
+- 저장 완료 후 Slack에 원 요청, 저장 요약, Notion page URL을 반환한다.
 
 테스트 포인트:
 
 - 기록 요청이 `PendingWrite`로 저장된다.
 - 만료된 `PendingWrite`는 저장되지 않는다.
-- 저장 성공 시 Notion URL이 Slack 응답에 포함된다.
+- 저장 성공 시 원 요청, 저장 요약, Notion URL이 Slack 응답에 포함된다.
 
 ### 8. SQLite PendingWrite Store 구현
 
@@ -247,6 +247,7 @@ create table if not exists pending_writes (
 테스트 포인트:
 
 - pending write 생성과 조회
+- 원 요청 보존
 - 만료 데이터 삭제
 - 저장 후 삭제
 
@@ -332,6 +333,7 @@ tests/
 - `tests/integration/workflows/recommendationWorkflow.test.ts`: Notion, Weather, OpenAI mock 기반 추천 workflow 검증
 - `tests/integration/workflows/logWorkflow.test.ts`: 자연어 기록 구조화와 pending write 생성 검증
 - `tests/integration/workflows/saveWorkflow.test.ts`: 승인 후 Notion 저장 검증
+- `tests/smoke/notionEnv.test.ts`: 실제 `.env`의 Notion token과 database ID 조회 검증. OpenAI API는 호출하지 않는다.
 
 ## 검증 명령
 
@@ -339,6 +341,7 @@ tests/
 npm install
 npm run typecheck
 npm test
+npm run test:smoke:notion
 npm run build
 ```
 
@@ -346,6 +349,7 @@ npm run build
 
 ```powershell
 Copy-Item -LiteralPath .env.example -Destination .env
+npm run test:smoke:notion
 npm run dev
 ```
 
@@ -389,3 +393,5 @@ npm run dev
 - 실제 Slack/Notion/OpenAI token 기반 Socket Mode smoke test는 아직 수행하지 않았다.
 - `/date` 단일 명령 대신 `/date-recommend`, `/date-note`로 나누는 문서와 코드 라우팅 변경이 반영되었다.
 - 테스트 파일은 `src` 경로를 반영하는 구조로 재배치했고, Notion/OpenAI adapter의 외부 API 호출 payload는 mock client 단위 테스트로 검증한다.
+- Notion smoke test는 `.env`의 database ID와 integration 공유 상태를 실제 Notion 조회로 검증한다.
+- Slack 저장 완료 응답은 원 요청과 저장 요약을 함께 표시한다.

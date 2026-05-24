@@ -59,8 +59,8 @@ Oracle Autonomous Database는 MVP에서 사용하지 않는다. 장기 기록과
 
 Notion `데이트 아카이브`를 읽고 쓰는 경계다.
 
-- `데이트` data source 조회
-- `기념일` data source 조회
+- `데이트` database 조회
+- `기념일` database 조회
 - 추천 후보 생성을 위한 정규화
 - 승인된 기록 또는 후보 page 생성
 - Notion property schema와 내부 도메인 모델 간 mapping
@@ -159,7 +159,7 @@ sequenceDiagram
     Slack->>App: interaction payload
     App->>Notion: 승인된 기록 저장
     Notion-->>App: 생성된 page URL
-    App->>Slack: 저장 완료 메시지
+    App->>Slack: 원 요청과 저장 요약을 포함한 저장 완료 메시지
 ```
 
 ## 외부 연동
@@ -182,7 +182,7 @@ sequenceDiagram
 
 - `데이트 아카이브`: `https://www.notion.so/2f32d61b14f080fb8c1dc2fa1d620fa9`
 
-확인된 data source:
+확인된 database:
 
 - `데이트`: `collection://2f32d61b-14f0-8185-921a-000b1bb7565b`
 - `기념일`: `collection://2f32d61b-14f0-81f1-adfc-000bc302a846`
@@ -264,10 +264,11 @@ PendingWrite
 - channel_id
 - action
 - payload
+- request
 - expires_at
 ```
 
-`PendingWrite`는 저장 승인 전 임시 상태다. MVP에서는 Oracle VM 로컬 SQLite에 저장해 프로세스 재시작 후에도 짧은 시간 동안 승인 대기를 유지할 수 있게 한다.
+`PendingWrite`는 저장 승인 전 임시 상태다. payload에는 Notion 저장 후보를, request에는 사용자가 보낸 `/date-note ...` 원 요청을 저장한다. MVP에서는 Oracle VM 로컬 SQLite에 저장해 프로세스 재시작 후에도 짧은 시간 동안 승인 대기를 유지할 수 있게 한다.
 
 ## 오류 처리와 관측성
 
@@ -300,6 +301,7 @@ PendingWrite
 - OpenAI 응답 JSON validation 테스트
 - 기록 구조화 결과의 Notion property mapping 테스트
 - Notion/Slack/OpenAI adapter는 mock 기반 통합 테스트
+- `.env` 기반 Notion database 조회 smoke test
 
 ### Oracle Always Free VM 실행
 

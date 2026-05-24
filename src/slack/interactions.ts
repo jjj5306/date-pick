@@ -1,3 +1,4 @@
+import type { KnownBlock } from '@slack/bolt';
 import { logger } from '../config/logger.js';
 import type { SaveWorkflowDependencies } from '../workflows/saveWorkflow.js';
 import { runSaveWorkflow } from '../workflows/saveWorkflow.js';
@@ -7,7 +8,7 @@ interface SlackActionResponse {
   response_type: 'in_channel';
   replace_original: boolean;
   text: string;
-  blocks?: ReturnType<typeof buildSavedDateLogBlocks>;
+  blocks?: KnownBlock[];
 }
 
 export async function handleSavePendingWrite(
