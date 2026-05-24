@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { buildDateLogCreatePayload, mapDateItemPage } from '../../src/adapters/notion/notionMapper.js';
-import { NotionMappingError } from '../../src/adapters/notion/notionTypes.js';
+import { buildDateLogCreatePayload, mapDateItemPage } from '../../../../src/adapters/notion/notionMapper.js';
+import { NotionMappingError } from '../../../../src/adapters/notion/notionTypes.js';
 
 const page = {
   id: 'page-1',
@@ -50,7 +50,19 @@ describe('notionMapper', () => {
       nextRecommendationHints: []
     });
 
-    expect(payload.parent.data_source_id).toBe('date-source');
+    expect(payload.parent.database_id).toBe('date-source');
     expect(payload.properties['예상 비용']).toEqual({ number: 110000 });
   });
+
+  test('omits Notion date property when extracted date is missing', () => {
+    const payload = buildDateLogCreatePayload('date-source', {
+      title: '성수 데이트',
+      date: '',
+      category: 'date',
+      missingFields: ['date']
+    });
+
+    expect(payload.properties['언제?']).toBeUndefined();
+  });
+
 });

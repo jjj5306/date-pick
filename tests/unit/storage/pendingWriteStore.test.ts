@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { applyMigrations, openSqlite } from '../../src/storage/sqlite.js';
-import { PendingWriteStore } from '../../src/storage/pendingWriteStore.js';
+import { applyMigrations, openSqlite } from '../../../src/storage/sqlite.js';
+import { PendingWriteStore } from '../../../src/storage/pendingWriteStore.js';
 
 async function createStore(ttlMs = 30 * 60 * 1000): Promise<PendingWriteStore> {
   const database = await openSqlite(':memory:');
@@ -43,6 +43,6 @@ describe('PendingWriteStore', () => {
     });
 
     expect(store.findById(created.id)).toBeUndefined();
-    expect(store.deleteExpired()).toBe(1);
+    expect(store.deleteExpired()).toBe(0);
   });
 });

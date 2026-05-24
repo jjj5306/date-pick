@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
-import { applyMigrations, openSqlite } from '../../src/storage/sqlite.js';
-import { PendingWriteStore } from '../../src/storage/pendingWriteStore.js';
-import { runSaveWorkflow } from '../../src/workflows/saveWorkflow.js';
+import { applyMigrations, openSqlite } from '../../../src/storage/sqlite.js';
+import { PendingWriteStore } from '../../../src/storage/pendingWriteStore.js';
+import { runSaveWorkflow } from '../../../src/workflows/saveWorkflow.js';
 
 describe('runSaveWorkflow', () => {
   test('saves an approved pending write to Notion and deletes it', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildRecommendationContext } from '../../src/engines/recommendation/contextBuilder.js';
+import { buildRecommendationContext } from '../../../../src/engines/recommendation/contextBuilder.js';
 
 describe('buildRecommendationContext', () => {
   test('limits compact OpenAI context to the top three candidates', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { runRecommendationWorkflow } from '../../src/workflows/recommendationWorkflow.js';
+import { runRecommendationWorkflow } from '../../../src/workflows/recommendationWorkflow.js';
 
 describe('runRecommendationWorkflow', () => {
   test('builds compact recommendation context from Notion and weather mocks', async () => {
@@ -12,7 +12,8 @@ describe('runRecommendationWorkflow', () => {
       requestId: 'r1',
       userId: 'U1',
       channelId: 'C1',
-      text: '이번 주말 추천'
+      text: '이번 주말 추천',
+      command: '/date-recommend'
     }, {
       notionRepository: {
         listDateItems: vi.fn().mockResolvedValue([

@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
-import { applyMigrations, openSqlite } from '../../src/storage/sqlite.js';
-import { PendingWriteStore } from '../../src/storage/pendingWriteStore.js';
-import { runLogWorkflow } from '../../src/workflows/logWorkflow.js';
+import { applyMigrations, openSqlite } from '../../../src/storage/sqlite.js';
+import { PendingWriteStore } from '../../../src/storage/pendingWriteStore.js';
+import { runLogWorkflow } from '../../../src/workflows/logWorkflow.js';
 
 describe('runLogWorkflow', () => {
   test('extracts a date log and stores it as a pending write', async () => {
@@ -13,7 +13,8 @@ describe('runLogWorkflow', () => {
       requestId: 'r1',
       userId: 'U1',
       channelId: 'C1',
-      text: '기록 오늘 성수'
+      text: '오늘 성수',
+      command: '/date-note'
     }, {
       pendingWriteStore,
       openAIAdapter: {

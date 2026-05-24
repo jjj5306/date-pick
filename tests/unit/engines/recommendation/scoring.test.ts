@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { scoreDateItems } from '../../src/engines/recommendation/scoring.js';
-import type { DateItem } from '../../src/domain/dateItem.js';
+import { scoreDateItems } from '../../../../src/engines/recommendation/scoring.js';
+import type { DateItem } from '../../../../src/domain/dateItem.js';
 
 const items: DateItem[] = [
   { id: '1', title: '완료한 맛집', category: 'restaurant', status: 'completed', priority: 'medium' },
