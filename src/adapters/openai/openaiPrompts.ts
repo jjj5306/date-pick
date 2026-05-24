@@ -7,12 +7,33 @@ export function buildRecommendationPrompt(context: RecommendationContext): strin
     category: candidate.category,
     location: candidate.location,
     estimatedCost: candidate.estimatedCost,
+    sourceUrl: candidate.sourceUrl,
     reasons: candidate.reasons,
     needsUserCheck: candidate.needsUserCheck
   }));
 
   return JSON.stringify({
-    task: 'Create up to three concise Korean date recommendations for Slack.',
+    task: 'Create up to three concise Korean date recommendations for Slack. Return JSON only.',
+    schema: {
+      summary: 'string, short Korean summary',
+      items: [{
+        title: 'string',
+        reason: 'string',
+        estimatedCostMin: 'optional number in KRW',
+        estimatedCostMax: 'optional number in KRW',
+        weatherFit: 'optional string',
+        noveltyReason: 'optional string',
+        confidence: 'one of low, medium, high',
+        needsUserCheck: 'boolean',
+        notionSourceUrls: 'string[] from candidate sourceUrl values only'
+      }]
+    },
+    constraints: [
+      'Use exactly the top-level keys summary and items.',
+      'Return at most three items.',
+      'Every item must include title, reason, confidence, needsUserCheck, and notionSourceUrls.',
+      'If a candidate has sourceUrl, include it in notionSourceUrls. Otherwise use an empty array.'
+    ],
     userRequest: context.userRequest,
     weather: context.weather,
     anniversaries: context.anniversaries,

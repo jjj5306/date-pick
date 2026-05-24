@@ -1,27 +1,51 @@
 import { describe, expect, test } from 'vitest';
-import { parseRecommendationResponse, parseStructuredDateLog, RetryableOpenAIResponseError } from '../../../../src/adapters/openai/openaiSchemas.js';
+import {
+  parseRecommendationResponse,
+  parseStructuredDateLog,
+  RetryableOpenAIResponseError
+} from '../../../../src/adapters/openai/openaiSchemas.js';
 
 describe('openaiSchemas', () => {
   test('parses a valid recommendation response', () => {
     expect(parseRecommendationResponse({
-      summary: '세 가지를 골랐어요.',
+      summary: 'Two options look good.',
       items: [{
-        title: '성수 전시',
-        reason: '실내라 좋아요.',
+        title: 'Gallery date',
+        reason: 'Good indoor option.',
         confidence: 'high',
         needsUserCheck: false,
         notionSourceUrls: []
       }]
-    }).items[0].title).toBe('성수 전시');
+    }).items[0].title).toBe('Gallery date');
+  });
+
+  test('normalizes common recommendation aliases and missing optional fields', () => {
+    expect(parseRecommendationResponse({
+      message: 'Two options look good.',
+      recommendations: [{
+        title: 'Wine bar',
+        description: 'Good for an anniversary evening.',
+        sources: ['https://notion.test/wine']
+      }]
+    })).toMatchObject({
+      summary: 'Two options look good.',
+      items: [{
+        title: 'Wine bar',
+        reason: 'Good for an anniversary evening.',
+        confidence: 'medium',
+        needsUserCheck: true,
+        notionSourceUrls: ['https://notion.test/wine']
+      }]
+    });
   });
 
   test('accepts incomplete date logs and keeps missing fields visible', () => {
     expect(parseStructuredDateLog({
-      title: '성수 데이트',
-      category: '데이트',
+      title: 'Seongsu date',
+      category: 'date',
       missingFields: ['date']
     })).toMatchObject({
-      title: '성수 데이트',
+      title: 'Seongsu date',
       date: '',
       category: 'date',
       missingFields: ['date']
@@ -30,5 +54,6 @@ describe('openaiSchemas', () => {
 
   test('turns invalid JSON shape into a retryable error', () => {
     expect(() => parseStructuredDateLog(null)).toThrow(RetryableOpenAIResponseError);
+    expect(() => parseRecommendationResponse(null)).toThrow(RetryableOpenAIResponseError);
   });
 });

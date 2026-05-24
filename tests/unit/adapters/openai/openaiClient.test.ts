@@ -7,10 +7,10 @@ import {
 describe('OpenAIClientAdapter', () => {
   test('calls OpenAI chat completions with JSON response format in generateRecommendationResponse', async () => {
     const client = createClient({
-      summary: '추천 완료',
+      summary: 'recommendation done',
       items: [{
-        title: '성수 전시',
-        reason: '비 오는 날 실내라 좋아요.',
+        title: 'gallery date',
+        reason: 'good indoor option',
         confidence: 'high',
         needsUserCheck: false,
         notionSourceUrls: ['https://notion.test/date']
@@ -19,24 +19,24 @@ describe('OpenAIClientAdapter', () => {
     const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client);
 
     await expect(adapter.generateRecommendationResponse({
-      userRequest: '이번 주말 추천',
+      userRequest: 'recommend this weekend',
       weather: {
         available: false,
         condition: 'unknown',
         indoorOutdoorHint: 'unknown',
         needsUserCheck: true
       },
-      anniversaries: [{ title: '1000일', date: '2026-06-01', type: 'anniversary' }],
+      anniversaries: [{ title: '1000 days', date: '2026-06-01', type: 'anniversary' }],
       candidates: [{
-        title: '성수 전시',
+        title: 'gallery date',
         category: 'date',
-        location: '성수',
+        location: 'Seongsu',
         estimatedCost: 80000,
         sourceUrl: 'https://notion.test/date',
         reasons: ['high priority'],
         needsUserCheck: false
       }]
-    })).resolves.toMatchObject({ summary: '추천 완료' });
+    })).resolves.toMatchObject({ summary: 'recommendation done' });
 
     expect(client.chat.completions.create).toHaveBeenCalledTimes(1);
     expect(client.chat.completions.create).toHaveBeenCalledWith(expect.objectContaining({
@@ -44,28 +44,31 @@ describe('OpenAIClientAdapter', () => {
       response_format: { type: 'json_object' },
       messages: [expect.objectContaining({
         role: 'user',
-        content: expect.stringContaining('이번 주말 추천')
+        content: expect.stringContaining('recommend this weekend')
       })]
     }));
+    expect(getLastMessageContent(client)).toMatch(/json/i);
+    expect(getLastMessageContent(client)).toContain('notionSourceUrls');
+    expect(getLastMessageContent(client)).toContain('https://notion.test/date');
   });
 
   test('calls OpenAI chat completions with JSON response format in extractDateLog', async () => {
     const client = createClient({
-      title: '성수 데이트',
+      title: 'Seongsu date',
       date: '2026-05-24',
       category: 'date',
-      location: '성수',
+      location: 'Seongsu',
       cost: 110000,
-      notes: '전시 후 파스타',
+      notes: 'exhibition and pasta',
       missingFields: [],
-      nextRecommendationHints: ['실내 전시 선호']
+      nextRecommendationHints: ['indoor exhibition']
     });
     const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client, () => new Date('2026-05-24T12:00:00.000+09:00'));
 
-    await expect(adapter.extractDateLog('오늘 성수에서 전시 보고 파스타 먹었어')).resolves.toMatchObject({
-      title: '성수 데이트',
+    await expect(adapter.extractDateLog('today exhibition in Seongsu')).resolves.toMatchObject({
+      title: 'Seongsu date',
       date: '2026-05-24',
-      location: '성수'
+      location: 'Seongsu'
     });
 
     expect(client.chat.completions.create).toHaveBeenCalledTimes(1);
@@ -77,14 +80,15 @@ describe('OpenAIClientAdapter', () => {
         content: expect.stringContaining('2026-05-24')
       })]
     }));
+    expect(getLastMessageContent(client)).toMatch(/json/i);
   });
 
   test('fills date from Korean relative text when OpenAI leaves date empty', async () => {
     const client = createClient({
-      title: '성수 데이트',
+      title: 'Seongsu date',
       date: '',
       category: 'date',
-      location: '성수',
+      location: 'Seongsu',
       missingFields: ['date'],
       nextRecommendationHints: []
     });
@@ -98,10 +102,10 @@ describe('OpenAIClientAdapter', () => {
 
   test('fills month-day dates from user text when OpenAI leaves date empty', async () => {
     const client = createClient({
-      title: '청수 데이트',
+      title: 'Cheongsu date',
       date: '',
       category: 'date',
-      location: '청수',
+      location: 'Cheongsu',
       missingFields: ['date'],
       nextRecommendationHints: []
     });
@@ -124,4 +128,9 @@ function createClient(responseJson: unknown): OpenAIChatApiClient {
       }
     }
   };
+}
+
+function getLastMessageContent(client: OpenAIChatApiClient): string {
+  const [input] = vi.mocked(client.chat.completions.create).mock.lastCall ?? [];
+  return input?.messages[0]?.content ?? '';
 }

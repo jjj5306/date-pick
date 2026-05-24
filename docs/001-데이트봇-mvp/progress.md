@@ -1,7 +1,7 @@
 # 진행 상황
 
-- 상태: `/date-recommend`, `/date-note` 명령 체계와 adapter 단위 테스트 구조 반영 완료
-- 최근 완료: README, 요구사항, 아키텍처, 구현 계획, Slack 라우팅, 테스트 구조, Notion/OpenAI API mock 호출 검증 반영
-- 다음 작업: 실제 Slack/Notion/OpenAI 토큰으로 로컬 Socket Mode smoke test 준비
+- 상태: `/date-recommend`, `/date-note` 명령 체계와 처리 중 표시, OpenAI 추천 응답 schema 보정까지 반영 완료
+- 최근 완료: 추천 프롬프트 schema 명시, 응답 별칭 정상화, OpenAI adapter/schema 계약 테스트 보강
+- 다음 작업: 실제 Slack/Notion/OpenAI 토큰으로 로컬 Socket Mode smoke test 반복
 - 막힌 점: 없음
 - 기준 문서: `implementation-plan-01.md`
