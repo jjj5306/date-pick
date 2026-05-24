@@ -15,3 +15,10 @@
 - workflow 통합 테스트는 `tests/integration/workflows/<파일명>.test.ts` 구조로 정리했다.
 - Notion adapter는 `databases.query`, `pages.create` 호출 payload를 mock client로 검증한다.
 - OpenAI adapter는 실제 유료 API를 호출하지 않고 chat completions 요청 payload와 JSON 응답 파싱을 mock client로 검증한다.
+
+## 2026-05-24: Notion 환경 smoke test 추가
+
+- `.env`의 `NOTION_TOKEN`, `NOTION_DATE_DATA_SOURCE_ID`, `NOTION_ANNIVERSARY_DATA_SOURCE_ID`로 실제 Notion database를 읽을 수 있는지 확인하는 `npm run test:smoke:notion` 명령을 추가했다.
+- 이 smoke test는 OpenAI API를 호출하지 않는다.
+- 기본 `npm test`는 외부 네트워크와 개인 `.env`에 의존하지 않도록 unit/integration mock 테스트만 실행한다.
+- Notion database ID 환경 변수는 전체 URL이나 view query가 아닌 ID 형식만 허용하도록 검증한다.

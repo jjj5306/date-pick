@@ -9,6 +9,7 @@
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
+    "test:smoke:notion": "vitest run --config vitest.smoke.config.ts tests/smoke/notionEnv.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint ."
   },

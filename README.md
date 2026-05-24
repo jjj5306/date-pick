@@ -19,11 +19,14 @@ npm install
 Copy-Item -LiteralPath .env.example -Destination .env
 npm run typecheck
 npm test
+npm run test:smoke:notion
 npm run build
 npm run dev
 ```
 
 Slack App은 Socket Mode를 켜고 Slash Commands에 `/date-recommend`, `/date-note`를 각각 추가해야 합니다. 추천은 `/date-recommend`, 기록은 `/date-note`를 사용하며, 기존 `/date` command는 제거하거나 사용하지 않습니다. 저장/수정/취소 버튼을 처리해야 하므로 Interactivity도 계속 켜 둡니다. 실제 Slack, Notion, OpenAI 호출은 `.env`에 토큰을 넣은 뒤 실행합니다.
+
+`npm run test:smoke:notion`은 `.env`의 Notion token과 database ID가 실제로 읽히는지 확인합니다. OpenAI API는 호출하지 않습니다.
 
 ## 환경 변수
 
@@ -38,3 +41,5 @@ Slack App은 Socket Mode를 켜고 Slash Commands에 `/date-recommend`, `/date-n
 - `NOTION_ANNIVERSARY_DATA_SOURCE_ID`
 - `SQLITE_PATH`
 - `OPENAI_MODEL`
+
+Notion ID 값은 전체 URL이 아니라 32자리 ID 또는 하이픈이 포함된 UUID 형식의 database ID만 넣습니다. `?v=...` 같은 view query가 붙어 있으면 실행 전에 환경 설정 검증에서 실패합니다.
