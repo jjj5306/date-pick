@@ -2,8 +2,9 @@ import OpenAI from 'openai';
 import type { StructuredDateLog } from '../../domain/dateItem.js';
 import type { RecommendationResult } from '../../domain/recommendation.js';
 import type { RecommendationContext } from '../../engines/recommendation/contextBuilder.js';
-import { fillDateFromUserText, formatDateInSeoul } from './openaiDateInference.js';
+import { formatDateInSeoul } from './openaiDateInference.js';
 import { buildDateLogExtractionPrompt, buildRecommendationPrompt } from './openaiPrompts.js';
+import { dateLogResponseFormat, recommendationResponseFormat, type OpenAIResponseFormat } from './openaiResponseFormats.js';
 import { parseRecommendationResponse, parseStructuredDateLog, RetryableOpenAIResponseError } from './openaiSchemas.js';
 
 export interface OpenAIAdapter {
@@ -20,7 +21,7 @@ export interface OpenAIChatApiClient {
     completions: {
       create(input: {
         model: string;
-        response_format: { type: 'json_object' };
+        response_format: OpenAIResponseFormat;
         messages: Array<{ role: 'user'; content: string }>;
       }): Promise<OpenAIChatResponse>;
     };
@@ -42,7 +43,7 @@ export class OpenAIClientAdapter implements OpenAIAdapter {
   async generateRecommendationResponse(context: RecommendationContext): Promise<RecommendationResult> {
     const response = await this.client.chat.completions.create({
       model: this.model,
-      response_format: { type: 'json_object' },
+      response_format: recommendationResponseFormat,
       messages: [{ role: 'user', content: buildRecommendationPrompt(context) }]
     });
     const content = response.choices[0]?.message.content ?? '{}';
@@ -53,11 +54,11 @@ export class OpenAIClientAdapter implements OpenAIAdapter {
     const referenceDate = formatDateInSeoul(this.now());
     const response = await this.client.chat.completions.create({
       model: this.model,
-      response_format: { type: 'json_object' },
+      response_format: dateLogResponseFormat,
       messages: [{ role: 'user', content: buildDateLogExtractionPrompt(text, referenceDate) }]
     });
     const content = response.choices[0]?.message.content ?? '{}';
-    return fillDateFromUserText(parseStructuredDateLog(parseJsonResponse(content)), text, referenceDate);
+    return parseStructuredDateLog(parseJsonResponse(content));
   }
 }
 

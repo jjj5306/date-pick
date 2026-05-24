@@ -1,67 +1,39 @@
 import { z } from 'zod';
 
-const categoryNameMap: Record<string, string> = {
-  '여행': 'travel',
-  '데이트': 'date',
-  '맛집': 'restaurant',
-  '기념일': 'anniversary',
-  '계절': 'seasonal',
-  '기타': 'other'
-};
+const nullableString = z.preprocess((value) => value === null ? undefined : value, z.string().optional());
+const nullableNumber = z.preprocess((value) => value === null ? undefined : value, z.number().optional());
 
-const recommendationItemSchema = z.preprocess((value) => {
-  if (!value || typeof value !== 'object') {
-    return value;
-  }
-
-  const item = value as Record<string, unknown>;
-  return {
-    ...item,
-    reason: item.reason ?? item.description ?? item.rationale,
-    notionSourceUrls: item.notionSourceUrls ?? item.sourceUrls ?? item.sources
-  };
-}, z.object({
+const recommendationItemSchema = z.object({
   title: z.string().trim().min(1),
   reason: z.string().trim().min(1),
-  estimatedCostMin: z.coerce.number().optional(),
-  estimatedCostMax: z.coerce.number().optional(),
-  weatherFit: z.string().optional(),
-  noveltyReason: z.string().optional(),
-  confidence: z.enum(['low', 'medium', 'high']).catch('medium'),
-  needsUserCheck: z.boolean().catch(true),
-  notionSourceUrls: z.array(z.string()).catch([])
-}));
+  estimatedCostMin: nullableNumber,
+  estimatedCostMax: nullableNumber,
+  weatherFit: nullableString,
+  noveltyReason: nullableString,
+  confidence: z.enum(['low', 'medium', 'high']),
+  needsUserCheck: z.boolean(),
+  notionSourceUrls: z.array(z.string())
+});
 
-export const recommendationResponseSchema = z.preprocess((value) => {
-  if (!value || typeof value !== 'object') {
-    return value;
-  }
-
-  const response = value as Record<string, unknown>;
-  return {
-    ...response,
-    summary: response.summary ?? response.message ?? response.title,
-    items: response.items ?? response.recommendations ?? response.results
-  };
-}, z.object({
+export const recommendationResponseSchema = z.object({
   summary: z.string().trim().min(1),
   items: z.array(recommendationItemSchema).max(3)
-}));
+});
 
 export const structuredDateLogSchema = z.object({
-  title: z.string().trim().min(1).catch('데이트 기록'),
-  date: z.string().catch(''),
-  category: z.preprocess(
-    (value) => typeof value === 'string' ? categoryNameMap[value] ?? value : value,
-    z.enum(['travel', 'date', 'restaurant', 'anniversary', 'seasonal', 'other']).catch('date')
+  title: z.string().trim().min(1),
+  date: z.string(),
+  category: z.enum(['travel', 'date', 'restaurant', 'anniversary', 'seasonal', 'other']),
+  location: nullableString,
+  indoorOutdoor: z.preprocess(
+    (value) => value === null ? undefined : value,
+    z.enum(['indoor', 'outdoor', 'mixed', 'unknown']).optional()
   ),
-  location: z.string().optional(),
-  indoorOutdoor: z.enum(['indoor', 'outdoor', 'mixed', 'unknown']).optional(),
-  cost: z.number().optional(),
-  sentiment: z.string().optional(),
-  notes: z.string().optional(),
-  nextRecommendationHints: z.array(z.string()).default([]),
-  missingFields: z.array(z.string()).default([])
+  cost: nullableNumber,
+  sentiment: nullableString,
+  notes: nullableString,
+  nextRecommendationHints: z.array(z.string()),
+  missingFields: z.array(z.string())
 });
 
 export type RecommendationResponseJson = z.infer<typeof recommendationResponseSchema>;

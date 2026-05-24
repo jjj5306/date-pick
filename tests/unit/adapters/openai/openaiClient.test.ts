@@ -5,12 +5,16 @@ import {
 } from '../../../../src/adapters/openai/openaiClient.js';
 
 describe('OpenAIClientAdapter', () => {
-  test('calls OpenAI chat completions with JSON response format in generateRecommendationResponse', async () => {
+  test('requests strict structured output for recommendations with a minimal prompt', async () => {
     const client = createClient({
       summary: 'recommendation done',
       items: [{
         title: 'gallery date',
         reason: 'good indoor option',
+        estimatedCostMin: null,
+        estimatedCostMax: null,
+        weatherFit: null,
+        noveltyReason: null,
         confidence: 'high',
         needsUserCheck: false,
         notionSourceUrls: ['https://notion.test/date']
@@ -38,83 +42,59 @@ describe('OpenAIClientAdapter', () => {
       }]
     })).resolves.toMatchObject({ summary: 'recommendation done' });
 
-    expect(client.chat.completions.create).toHaveBeenCalledTimes(1);
-    expect(client.chat.completions.create).toHaveBeenCalledWith(expect.objectContaining({
+    const input = getLastCreateInput(client);
+    expect(input).toMatchObject({
       model: 'gpt-test',
-      response_format: { type: 'json_object' },
-      messages: [expect.objectContaining({
-        role: 'user',
-        content: expect.stringContaining('recommend this weekend')
-      })]
-    }));
-    expect(getLastMessageContent(client)).toMatch(/json/i);
-    expect(getLastMessageContent(client)).toContain('notionSourceUrls');
-    expect(getLastMessageContent(client)).toContain('https://notion.test/date');
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'date_recommendation',
+          strict: true
+        }
+      }
+    });
+    expect(input.messages[0]?.content).toContain('recommend_dates');
+    expect(input.messages[0]?.content).toContain('https://notion.test/date');
+    expect(input.messages[0]?.content).not.toContain('notionSourceUrls');
   });
 
-  test('calls OpenAI chat completions with JSON response format in extractDateLog', async () => {
+  test('uses OpenAI structured date output without code-side date inference', async () => {
     const client = createClient({
       title: 'Seongsu date',
-      date: '2026-05-24',
+      date: '2026-05-23',
       category: 'date',
       location: 'Seongsu',
+      indoorOutdoor: 'indoor',
       cost: 110000,
+      sentiment: null,
       notes: 'exhibition and pasta',
-      missingFields: [],
-      nextRecommendationHints: ['indoor exhibition']
-    });
-    const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client, () => new Date('2026-05-24T12:00:00.000+09:00'));
-
-    await expect(adapter.extractDateLog('today exhibition in Seongsu')).resolves.toMatchObject({
-      title: 'Seongsu date',
-      date: '2026-05-24',
-      location: 'Seongsu'
-    });
-
-    expect(client.chat.completions.create).toHaveBeenCalledTimes(1);
-    expect(client.chat.completions.create).toHaveBeenCalledWith(expect.objectContaining({
-      model: 'gpt-test',
-      response_format: { type: 'json_object' },
-      messages: [expect.objectContaining({
-        role: 'user',
-        content: expect.stringContaining('2026-05-24')
-      })]
-    }));
-    expect(getLastMessageContent(client)).toMatch(/json/i);
-  });
-
-  test('fills date from Korean relative text when OpenAI leaves date empty', async () => {
-    const client = createClient({
-      title: 'Seongsu date',
-      date: '',
-      category: 'date',
-      location: 'Seongsu',
-      missingFields: ['date'],
-      nextRecommendationHints: []
+      nextRecommendationHints: ['indoor exhibition'],
+      missingFields: []
     });
     const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client, () => new Date('2026-05-24T12:00:00.000+09:00'));
 
     await expect(adapter.extractDateLog('어제 성수에서 전시 보고 파스타 먹었어')).resolves.toMatchObject({
+      title: 'Seongsu date',
       date: '2026-05-23',
+      location: 'Seongsu',
       missingFields: []
     });
-  });
 
-  test('fills month-day dates from user text when OpenAI leaves date empty', async () => {
-    const client = createClient({
-      title: 'Cheongsu date',
-      date: '',
-      category: 'date',
-      location: 'Cheongsu',
-      missingFields: ['date'],
-      nextRecommendationHints: []
+    const input = getLastCreateInput(client);
+    expect(input).toMatchObject({
+      model: 'gpt-test',
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'date_log',
+          strict: true
+        }
+      }
     });
-    const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client, () => new Date('2026-05-24T12:00:00.000+09:00'));
-
-    await expect(adapter.extractDateLog('4월 11일에 청수에서 소공하고 와인 먹었어')).resolves.toMatchObject({
-      date: '2026-04-11',
-      missingFields: []
-    });
+    expect(input.messages[0]?.content).toContain('extract_date_log');
+    expect(input.messages[0]?.content).toContain('2026-05-24');
+    expect(input.messages[0]?.content).not.toContain('오늘');
+    expect(input.messages[0]?.content).not.toContain('어제 means');
   });
 });
 
@@ -130,7 +110,10 @@ function createClient(responseJson: unknown): OpenAIChatApiClient {
   };
 }
 
-function getLastMessageContent(client: OpenAIChatApiClient): string {
+function getLastCreateInput(client: OpenAIChatApiClient) {
   const [input] = vi.mocked(client.chat.completions.create).mock.lastCall ?? [];
-  return input?.messages[0]?.content ?? '';
+  if (!input) {
+    throw new Error('OpenAI create was not called.');
+  }
+  return input;
 }

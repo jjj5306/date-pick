@@ -1,22 +1,17 @@
 # 변경 이력
 
-## 2026-05-24: OpenAI 추천 JSON 응답 요청 보정
+## 2026-05-24: OpenAI strict structured output 적용
 
-- `/date-recommend`에서 `response_format: json_object`를 사용할 때 OpenAI 메시지에 `json` 지시가 포함되도록 추천 프롬프트를 보정했다.
-- OpenAI adapter 단위 테스트에서 추천/기록 요청 메시지가 `json_object` 계약을 만족하는지 검증한다.
-- 추천 프롬프트에 응답 schema와 Notion source URL 포함 규칙을 명시하고, 흔한 응답 별칭은 파서에서 정상화한다.
-- OpenAI 응답 검증 실패 시 raw 응답 대신 schema path 중심의 오류만 남기도록 했다.
+- OpenAI 호출을 `response_format: json_object`에서 `response_format: json_schema`와 `strict: true`로 변경했다.
+- 추천과 기록 응답 schema를 코드의 `openaiResponseFormats.ts`로 분리하고, 프롬프트에서는 schema 설명과 장황한 제약 문구를 제거했다.
+- 기록 날짜는 OpenAI가 `referenceDate`와 `timezone`을 보고 직접 `date` 필드에 구조화하도록 하고, 코드의 한국어 날짜 정규식 보정 로직을 제거했다.
+- OpenAI 실제 API는 테스트하지 않고, mock client로 strict response format과 최소 프롬프트 payload를 검증한다.
 
 ## 2026-05-24: Slack 처리 중 표시 추가
 
 - `/date-recommend`, `/date-note` 명령을 받으면 먼저 공개 처리 중 메시지를 표시한다.
 - OpenAI/Notion 처리가 끝나면 처리 중 메시지를 최종 추천 결과, 기록 미리보기, 또는 오류 메시지로 교체한다.
 - 사용자가 긴 요청 처리 중에도 봇이 정상적으로 작업 중임을 확인할 수 있도록 했다.
-
-## 2026-05-24: 기록 날짜 보정 강화
-
-- OpenAI 기록 구조화 prompt에 Asia/Seoul 기준 날짜와 상대 날짜 해석 규칙을 포함했다.
-- OpenAI가 날짜를 비우거나 `오늘`, `어제`, `M월 D일` 같은 표현을 그대로 반환해도 코드에서 ISO 날짜로 보정한다.
 
 ## 2026-05-24: Slack 응답 공개와 원 요청 보존
 
