@@ -13,9 +13,9 @@ interface NotionCreateResponse {
   url: string;
 }
 
-interface NotionApiClient {
-  dataSources: {
-    query(input: { data_source_id: string }): Promise<NotionQueryResponse>;
+export interface NotionApiClient {
+  databases: {
+    query(input: { database_id: string }): Promise<NotionQueryResponse>;
   };
   pages: {
     create(input: NotionCreatePagePayload): Promise<NotionCreateResponse>;
@@ -28,18 +28,19 @@ export class NotionClientRepository implements NotionRepository {
   constructor(
     token: string,
     private readonly dateDataSourceId: string,
-    private readonly anniversaryDataSourceId: string
+    private readonly anniversaryDataSourceId: string,
+    client?: NotionApiClient
   ) {
-    this.client = new Client({ auth: token }) as unknown as NotionApiClient;
+    this.client = client ?? (new Client({ auth: token }) as unknown as NotionApiClient);
   }
 
   async listDateItems(): Promise<DateItem[]> {
-    const response = await this.client.dataSources.query({ data_source_id: this.dateDataSourceId });
+    const response = await this.client.databases.query({ database_id: this.dateDataSourceId });
     return response.results.map((page) => mapDateItemPage(page as NotionPageLike));
   }
 
   async listAnniversaries(): Promise<Anniversary[]> {
-    const response = await this.client.dataSources.query({ data_source_id: this.anniversaryDataSourceId });
+    const response = await this.client.databases.query({ database_id: this.anniversaryDataSourceId });
     return response.results.map((page) => mapAnniversaryPage(page as NotionPageLike));
   }
 

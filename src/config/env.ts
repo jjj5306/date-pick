@@ -10,8 +10,7 @@ const envSchema = z.object({
   NOTION_DATE_DATA_SOURCE_ID: z.string().min(1),
   NOTION_ANNIVERSARY_DATA_SOURCE_ID: z.string().min(1),
   SQLITE_PATH: z.string().min(1),
-  OPENAI_MODEL: z.string().min(1),
-  OPENAI_MONTHLY_BUDGET_KRW: z.coerce.number().nonnegative()
+  OPENAI_MODEL: z.string().min(1)
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

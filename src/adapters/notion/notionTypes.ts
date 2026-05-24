@@ -9,7 +9,7 @@ export interface NotionPageLike {
 }
 
 export interface NotionCreatePagePayload {
-  parent: { data_source_id: string };
+  parent: { database_id: string };
   properties: NotionPageProperties;
 }
 

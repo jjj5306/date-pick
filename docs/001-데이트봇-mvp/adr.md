@@ -50,7 +50,7 @@ Free Tier에서 사용할 수 있지만 MVP의 장기 데이터는 Notion에 저
 - Oracle Always Free VM 생성 가능 여부와 idle reclaim 가능성을 운영 준비 단계에서 확인해야 한다.
 - Socket Mode 사용을 위해 Slack app-level token 관리가 필요하다.
 - SQLite 파일 백업과 마이그레이션 전략이 필요하다.
-- OpenAI API 키 관리, 사용량 제한, 월 예산 상한 설정이 필요하다.
+- OpenAI API 키 관리와 호출량 관측이 필요하다.
 - Slack App/Bot과 Notion integration 권한 범위를 최소화해야 한다.
 
 ## 관련 이슈

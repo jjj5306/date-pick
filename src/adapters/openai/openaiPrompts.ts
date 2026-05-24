@@ -24,6 +24,17 @@ export function buildDateLogExtractionPrompt(text: string): string {
   return JSON.stringify({
     task: 'Extract a structured Korean date log. Return JSON only.',
     userText: text,
-    requiredFields: ['title', 'date', 'category', 'location', 'cost', 'notes']
+    schema: {
+      title: 'string, short Korean title. Use a sensible fallback if unclear.',
+      date: 'string in YYYY-MM-DD format. Use an empty string when unknown.',
+      category: 'one of travel, date, restaurant, anniversary, seasonal, other',
+      location: 'optional string',
+      indoorOutdoor: 'optional one of indoor, outdoor, mixed, unknown',
+      cost: 'optional number in KRW',
+      sentiment: 'optional string',
+      notes: 'optional string',
+      nextRecommendationHints: 'string[]',
+      missingFields: 'string[] for unknown required fields such as date or location'
+    }
   });
 }

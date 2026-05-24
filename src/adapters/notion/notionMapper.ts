@@ -94,16 +94,21 @@ export function mapAnniversaryPage(page: NotionPageLike): Anniversary {
 }
 
 export function buildDateLogCreatePayload(dataSourceId: string, log: StructuredDateLog): NotionCreatePagePayload {
+  const properties: NotionPageProperties = {
+    '이름': { title: [{ text: { content: log.title } }] },
+    '분류': { select: { name: '데이트' } },
+    '상태': { status: { name: '완료' } },
+    '예상 비용': { number: log.cost ?? null },
+    '어디로?': { rich_text: [{ text: { content: log.location ?? '' } }] },
+    '비고': { rich_text: [{ text: { content: log.notes ?? '' } }] }
+  };
+
+  if (log.date) {
+    properties['언제?'] = { date: { start: log.date } };
+  }
+
   return {
-    parent: { data_source_id: dataSourceId },
-    properties: {
-      '이름': { title: [{ text: { content: log.title } }] },
-      '분류': { select: { name: '데이트' } },
-      '상태': { status: { name: '완료' } },
-      '언제?': { date: { start: log.date } },
-      '예상 비용': { number: log.cost ?? null },
-      '어디로?': { rich_text: [{ text: { content: log.location ?? '' } }] },
-      '비고': { rich_text: [{ text: { content: log.notes ?? '' } }] }
-    }
+    parent: { database_id: dataSourceId },
+    properties
   };
 }

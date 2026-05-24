@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+const categoryNameMap: Record<string, string> = {
+  '여행': 'travel',
+  '데이트': 'date',
+  '맛집': 'restaurant',
+  '기념일': 'anniversary',
+  '계절': 'seasonal',
+  '기타': 'other'
+};
+
 export const recommendationResponseSchema = z.object({
   summary: z.string(),
   items: z.array(z.object({
@@ -16,9 +25,12 @@ export const recommendationResponseSchema = z.object({
 });
 
 export const structuredDateLogSchema = z.object({
-  title: z.string().min(1),
-  date: z.string().min(1),
-  category: z.enum(['travel', 'date', 'restaurant', 'anniversary', 'seasonal', 'other']),
+  title: z.string().trim().min(1).catch('데이트 기록'),
+  date: z.string().catch(''),
+  category: z.preprocess(
+    (value) => typeof value === 'string' ? categoryNameMap[value] ?? value : value,
+    z.enum(['travel', 'date', 'restaurant', 'anniversary', 'seasonal', 'other']).catch('date')
+  ),
   location: z.string().optional(),
   indoorOutdoor: z.enum(['indoor', 'outdoor', 'mixed', 'unknown']).optional(),
   cost: z.number().optional(),

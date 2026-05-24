@@ -37,7 +37,12 @@ export class PendingWriteStore {
 
   findById(id: string): PendingWrite | undefined {
     const row = this.database.findPendingWriteById(id);
-    if (!row || new Date(row.expires_at).getTime() <= Date.now()) {
+    if (!row) {
+      return undefined;
+    }
+
+    if (new Date(row.expires_at).getTime() <= Date.now()) {
+      this.database.deletePendingWriteById(id);
       return undefined;
     }
 
