@@ -85,6 +85,7 @@ Notion API schema는 구현 시 환경 설정 또는 schema mapping 파일로 �
 자연어 데이트 기록을 Notion 저장 후보로 바꾸는 모듈이다.
 
 - 날짜, 이름, 분류, 장소, 비용, 비고 추출
+- 현재 날짜 기준 한국어 상대 날짜 보정
 - 누락 정보 표시
 - Notion 저장 미리보기 생성
 - Slack 버튼 승인 후 Notion Adapter에 저장 요청 전달

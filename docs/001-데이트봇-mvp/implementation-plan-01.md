@@ -162,6 +162,7 @@
 - 추천 설명 생성 함수 `generateRecommendationResponse`를 만든다.
 - 자연어 기록 구조화 함수 `extractDateLog`를 만든다.
 - OpenAI 응답은 JSON schema 검증 후 workflow에 전달한다.
+- OpenAI가 날짜를 비운 경우 `오늘`, `어제`, `그제`, `M월 D일` 같은 한국어 날짜 표현은 현재 날짜 기준으로 보정한다.
 - 요청 context는 필요한 Notion 요약과 사용자 입력으로 제한한다.
 - token 사용량을 log context에 남길 수 있게 한다.
 
@@ -169,6 +170,7 @@
 
 - 정상 JSON 응답을 domain 타입으로 변환한다.
 - JSON validation 실패 시 재시도 가능한 오류로 변환한다.
+- 한국어 상대 날짜와 월/일 표현이 `YYYY-MM-DD`로 보정된다.
 - prompt builder가 전체 Notion 원문을 그대로 넣지 않고 compact context만 넣는지 확인한다.
 
 ### 6. Recommendation Engine 구현

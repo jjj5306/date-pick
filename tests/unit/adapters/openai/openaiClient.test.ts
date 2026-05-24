@@ -1,5 +1,8 @@
 import { describe, expect, test, vi } from 'vitest';
-import { OpenAIClientAdapter, type OpenAIChatApiClient } from '../../../../src/adapters/openai/openaiClient.js';
+import {
+  OpenAIClientAdapter,
+  type OpenAIChatApiClient
+} from '../../../../src/adapters/openai/openaiClient.js';
 
 describe('OpenAIClientAdapter', () => {
   test('calls OpenAI chat completions with JSON response format in generateRecommendationResponse', async () => {
@@ -57,10 +60,11 @@ describe('OpenAIClientAdapter', () => {
       missingFields: [],
       nextRecommendationHints: ['실내 전시 선호']
     });
-    const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client);
+    const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client, () => new Date('2026-05-24T12:00:00.000+09:00'));
 
     await expect(adapter.extractDateLog('오늘 성수에서 전시 보고 파스타 먹었어')).resolves.toMatchObject({
       title: '성수 데이트',
+      date: '2026-05-24',
       location: '성수'
     });
 
@@ -70,9 +74,43 @@ describe('OpenAIClientAdapter', () => {
       response_format: { type: 'json_object' },
       messages: [expect.objectContaining({
         role: 'user',
-        content: expect.stringContaining('오늘 성수에서 전시 보고 파스타 먹었어')
+        content: expect.stringContaining('2026-05-24')
       })]
     }));
+  });
+
+  test('fills date from Korean relative text when OpenAI leaves date empty', async () => {
+    const client = createClient({
+      title: '성수 데이트',
+      date: '',
+      category: 'date',
+      location: '성수',
+      missingFields: ['date'],
+      nextRecommendationHints: []
+    });
+    const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client, () => new Date('2026-05-24T12:00:00.000+09:00'));
+
+    await expect(adapter.extractDateLog('어제 성수에서 전시 보고 파스타 먹었어')).resolves.toMatchObject({
+      date: '2026-05-23',
+      missingFields: []
+    });
+  });
+
+  test('fills month-day dates from user text when OpenAI leaves date empty', async () => {
+    const client = createClient({
+      title: '청수 데이트',
+      date: '',
+      category: 'date',
+      location: '청수',
+      missingFields: ['date'],
+      nextRecommendationHints: []
+    });
+    const adapter = new OpenAIClientAdapter('test-key', 'gpt-test', client, () => new Date('2026-05-24T12:00:00.000+09:00'));
+
+    await expect(adapter.extractDateLog('4월 11일에 청수에서 소공하고 와인 먹었어')).resolves.toMatchObject({
+      date: '2026-04-11',
+      missingFields: []
+    });
   });
 });
 

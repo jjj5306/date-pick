@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import type { StructuredDateLog } from '../../domain/dateItem.js';
 import type { RecommendationResult } from '../../domain/recommendation.js';
 import type { RecommendationContext } from '../../engines/recommendation/contextBuilder.js';
+import { fillDateFromUserText, formatDateInSeoul } from './openaiDateInference.js';
 import { buildDateLogExtractionPrompt, buildRecommendationPrompt } from './openaiPrompts.js';
 import { parseRecommendationResponse, parseStructuredDateLog, RetryableOpenAIResponseError } from './openaiSchemas.js';
 
@@ -32,7 +33,8 @@ export class OpenAIClientAdapter implements OpenAIAdapter {
   constructor(
     apiKey: string,
     private readonly model: string,
-    client?: OpenAIChatApiClient
+    client?: OpenAIChatApiClient,
+    private readonly now: () => Date = () => new Date()
   ) {
     this.client = client ?? (new OpenAI({ apiKey }) as OpenAIChatApiClient);
   }
@@ -48,13 +50,14 @@ export class OpenAIClientAdapter implements OpenAIAdapter {
   }
 
   async extractDateLog(text: string): Promise<StructuredDateLog> {
+    const referenceDate = formatDateInSeoul(this.now());
     const response = await this.client.chat.completions.create({
       model: this.model,
       response_format: { type: 'json_object' },
-      messages: [{ role: 'user', content: buildDateLogExtractionPrompt(text) }]
+      messages: [{ role: 'user', content: buildDateLogExtractionPrompt(text, referenceDate) }]
     });
     const content = response.choices[0]?.message.content ?? '{}';
-    return parseStructuredDateLog(parseJsonResponse(content));
+    return fillDateFromUserText(parseStructuredDateLog(parseJsonResponse(content)), text, referenceDate);
   }
 }
 
